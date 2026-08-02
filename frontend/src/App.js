@@ -1,55 +1,60 @@
-import { useEffect } from "react";
+import React from "react";
 import "@/App.css";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import axios from "axios";
-import { HOME } from "@/constants/testIds";
+import { BrowserRouter, Routes, Route, Navigate, Outlet } from "react-router-dom";
+import { Toaster } from "sonner";
+import { AuthProvider, useAuth } from "@/context/AuthContext";
+import Navbar from "@/components/Navbar";
+import Landing from "@/pages/Landing";
+import { Login, Register } from "@/pages/Auth";
+import Dashboard from "@/pages/Dashboard";
+import Resume from "@/pages/Resume";
+import Career from "@/pages/Career";
+import Interview from "@/pages/Interview";
+import Skills from "@/pages/Skills";
+import Jobs from "@/pages/Jobs";
+import Progress from "@/pages/Progress";
+import Profile from "@/pages/Profile";
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
-
-const Home = () => {
-  const helloWorldApi = async () => {
-    try {
-      const response = await axios.get(`${API}/`);
-      console.log(response.data.message);
-    } catch (e) {
-      console.error(e, `errored out requesting / api`);
-    }
-  };
-
-  useEffect(() => {
-    helloWorldApi();
-  }, []);
-
+function ProtectedShell() {
+  const { user, loading } = useAuth();
+  if (loading) return <div className="min-h-screen flex items-center justify-center text-slate-400">Loading…</div>;
+  if (!user) return <Navigate to="/login" replace />;
   return (
-    <div>
-      <header className="App-header">
-        <a
-          data-testid={HOME.emergentLink}
-          className="App-link"
-          href="https://emergent.sh"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <img src="https://avatars.githubusercontent.com/in/1201222?s=120&u=2686cf91179bbafbc7a71bfbc43004cf9ae1acea&v=4" />
-        </a>
-        <p className="mt-5">Building something incredible ~!</p>
-      </header>
+    <div className="min-h-screen">
+      <Navbar />
+      <main className="lg:pl-64">
+        <div className="max-w-6xl mx-auto p-6 lg:p-10">
+          <Outlet />
+        </div>
+      </main>
     </div>
   );
-};
+}
 
 function App() {
   return (
-    <div className="App">
+    <AuthProvider>
       <BrowserRouter>
+        <Toaster theme="dark" position="top-right" richColors />
         <Routes>
-          <Route path="/" element={<Home />}>
-            <Route index element={<Home />} />
+          <Route path="/" element={<Landing />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/app" element={<ProtectedShell />}>
+            <Route index element={<Navigate to="/app/dashboard" replace />} />
+            <Route path="dashboard" element={<Dashboard />} />
+            <Route path="resume" element={<Resume />} />
+            <Route path="career" element={<Career />} />
+            <Route path="interview" element={<Interview />} />
+            <Route path="skills" element={<Skills />} />
+            <Route path="jobs" element={<Jobs />} />
+            <Route path="progress" element={<Progress />} />
+            <Route path="profile" element={<Profile />} />
           </Route>
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
-    </div>
+    </AuthProvider>
   );
 }
 
